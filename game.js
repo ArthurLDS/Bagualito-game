@@ -20,7 +20,7 @@ game.character = {
   width: 50,
   color: "#e43",
   speed: 0,
-  gravity: 1.5,
+  gravity: 1.6,
   jumpPower: 20,
   qntJumps: 0,
   refresh: function(){
@@ -41,6 +41,42 @@ game.character = {
   draw: function(){
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+};
+
+game.obstacles = {
+  obstacles : [],
+  colors: ["#ffe805", "#05ffd9", "#be05ff", "#1ed665", "#ff9126", "#11F"],
+  insersionTime: 0,
+  speed: 8,
+  insert: function() {
+    let obstacle = {
+      x: WIDTH,
+      width: 50 + Math.round(30 * Math.random()),
+      height: 30 + Math.round(120 * Math.random()),
+      color: this.colors[Math.round(5 * Math.random())]
+    };
+    this.obstacles.push(obstacle);
+    this.insersionTime = 20 + Math.round(30 * Math.random());
+  },
+  refresh: function(){
+    if(this.insersionTime === 0)
+      this.insert();
+    else
+      this.insersionTime--;
+    for (let i = 0; i <this.obstacles.length; i++) {
+      let obstacle = this.obstacles[i];
+      obstacle.x -= this.speed;
+      if(obstacle.x <= -obstacle.width)
+        this.obstacles.splice(i, 1);
+    }
+  },
+  draw: function() {
+    for(let i=0; i<this.obstacles.length; i++){
+      let obstacle = this.obstacles[i];
+      ctx.fillStyle = obstacle.color;
+      ctx.fillRect(obstacle.x, game.ground.y - obstacle.height, obstacle.width, obstacle.height);
+    }
   }
 };
 
@@ -70,19 +106,21 @@ game.run = function(){
 
 game.refresh = function(){
   game.character.refresh();
+  game.obstacles.refresh();
   frames++;
 };
 
 game.draw = function(){
   drawCanvasBackground();
-  game.character.draw();
-  game.ground.draw();
 
+  game.ground.draw();
+  game.obstacles.draw();
+  game.character.draw();
 };
 
 drawCanvasBackground = function(){
   ctx.fillStyle = "#50BEFF";
-  ctx.fillRect(0,0, WIDTH, HEIGHT);
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
 };
 
 game.main();
