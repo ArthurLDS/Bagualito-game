@@ -1,6 +1,11 @@
 
-var canvas, ctx, frames = 0, game = {};
+var canvas, ctx, frames = 0, game = {}, currentStatus;
 const WIDTH=900, HEIGHT=600, MAX_JUMPS=3;
+const status = {
+  NOT_STARTED: 0,
+  PLAYING: 1,
+  LOOSER_GAME: 2,
+};
 
 game.ground = {
   x: 0,
@@ -21,7 +26,7 @@ game.character = {
   color: "#e43",
   speed: 0,
   gravity: 1.6,
-  jumpPower: 20,
+  jumpPower: 25,
   qntJumps: 0,
   refresh: function(){
     this.speed += this.gravity;
@@ -31,6 +36,7 @@ game.character = {
     }
     if(this.y == game.ground.y - this.height)
       this.qntJumps = 0;
+
   },
   jump: function(){
     if(this.qntJumps < MAX_JUMPS){
@@ -67,7 +73,12 @@ game.obstacles = {
     for (let i = 0; i <this.obstacles.length; i++) {
       let obstacle = this.obstacles[i];
       obstacle.x -= this.speed;
-      if(obstacle.x <= -obstacle.width)
+      obstacle.y = game.ground.y - obstacle.height;
+
+      if(checkLoseGame(game.character, obstacle))
+        currentStatus = status.LOOSER_GAME;
+
+      if(obstacle.x < -obstacle.width)
         this.obstacles.splice(i, 1);
     }
   },
@@ -81,7 +92,12 @@ game.obstacles = {
 };
 
 game.clickJump = function(){
-  game.character.jump();
+  if(currentStatus == status.NOT_STARTED)
+      currentStatus = status.PLAYING;
+  else if(currentStatus == status.LOOSER_GAME)
+      currentStatus = status.PLAYING;
+  else
+      game.character.jump();
 };
 
 game.main = function(){
@@ -94,8 +110,8 @@ game.main = function(){
 
   $("body").click(() => game.clickJump());
 
-  game.run();
-  setInterval(() => game.run(), 50);
+  currentStatus = status.NOT_STARTED;
+  setInterval(() => game.run(), 40);
 };
 
 
@@ -106,21 +122,68 @@ game.run = function(){
 
 game.refresh = function(){
   game.character.refresh();
-  game.obstacles.refresh();
-  frames++;
+  if(currentStatus == status.PLAYING){
+    game.obstacles.refresh();
+    frames++;
+  }
+
 };
 
 game.draw = function(){
   drawCanvasBackground();
 
+
   game.ground.draw();
-  game.obstacles.draw();
   game.character.draw();
+  if(currentStatus == status.NOT_STARTED){
+    drawStartGameScreen();
+  }
+  else if(currentStatus == status.LOOSER_GAME){
+    drawYouLostScreen();
+  }
+  else{
+    game.obstacles.draw();
+    drawCountFrames();
+    drawQntJumps();
+  }
+
 };
 
 drawCanvasBackground = function(){
   ctx.fillStyle = "#50BEFF";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
+};
+
+drawStartGameScreen = function(){
+  ctx.font = "40px Arial";
+  ctx.fillStyle = "#3f3";
+  ctx.fillText("CLICK HERE TO START THE GAME.", WIDTH/2-340, HEIGHT/2);
+}
+
+drawYouLostScreen = function(){
+  ctx.font = "40px Arial Black";
+  ctx.fillStyle = "#F00";
+  ctx.fillText("YOU LOST! :(", WIDTH/2-145, HEIGHT/2);
+}
+
+drawCountFrames = function() {
+  ctx.font = "20px Arial";
+  ctx.fillStyle = "#000";
+  ctx.fillText(`Points: ${frames}`,10,30);
+}
+
+drawQntJumps = function(){
+  ctx.font = "20px Arial";
+  ctx.fillStyle = "#000";
+  ctx.fillText(`Jumps: ${game.character.qntJumps}`,10,60);
+}
+
+checkLoseGame = function(character, obstacle){
+  if(character.x < obstacle.x + obstacle.width &&
+    character.x + character.width >= obstacle.x &&
+     character.y + character.height>= obstacle.y)
+       return true;
+  return false;
 };
 
 game.main();
