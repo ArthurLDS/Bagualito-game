@@ -126,6 +126,9 @@ game.refresh = function(){
     game.obstacles.refresh();
     frames++;
   }
+  else if(currentStatus == status.LOOSER_GAME){
+    frames = 0;
+  }
 
 };
 
