@@ -1,5 +1,5 @@
 
-var canvas, ctx, frames = 0, game = {}, currentStatus;
+var canvas, ctx, frames = 0, game = {}, currentStatus, record, image;
 const WIDTH=900, HEIGHT=600;
 const status = {
   NOT_STARTED: 0,
@@ -11,7 +11,7 @@ game.ground = {
   x: 0,
   y: HEIGHT-50,
   height: 50,
-  color: "#ffdf70",
+  color: "#b1ab21",
   draw: function(){
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x, this.y, WIDTH, this.height);
@@ -19,10 +19,10 @@ game.ground = {
 };
 
 game.character = {
-  x: 50,
+  x: 40,
   y: 50,
-  height: 50,
-  width: 50,
+  height: 100,
+  width: 60,
   color: "#e43",
   speed: 0,
   gravity: 1.6,
@@ -46,8 +46,9 @@ game.character = {
     }
   },
   draw: function(){
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    let img = new Image();
+    img.src = "character-running.gif";
+    ctx.drawImage(img, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height);
   }
 };
 
@@ -76,10 +77,14 @@ game.obstacles = {
       obstacle.x -= this.speed;
       obstacle.y = game.ground.y - obstacle.height;
 
-      if(checkLoseGame(game.character, obstacle))
+      if(checkLoseGame(game.character, obstacle)){
         currentStatus = status.LOOSER_GAME;
-      else if(game.character.x + game.character.width == obstacle.x)
+      }
+      else if(game.character.x + game.character.width == obstacle.x){
         game.character.points++;
+        if(checkRecordGame(game.character.points))
+          setNewRecord(game.character.points);
+      }
 
       if(obstacle.x < -obstacle.width)
         this.obstacles.splice(i, 1);
@@ -97,9 +102,11 @@ game.obstacles = {
   }
 };
 
-game.clickJump = function(){
-  if(currentStatus == status.NOT_STARTED)
-      currentStatus = status.PLAYING;
+game.click = function(){
+  if(currentStatus == status.NOT_STARTED){
+    currentStatus = status.PLAYING;
+    game.character.speed = 0;
+  }
   else if(currentStatus == status.LOOSER_GAME){
     game.obstacles.clearObstables();
     game.character.points = 0;
@@ -118,16 +125,26 @@ game.main = function(){
   ctx = canvas.getContext("2d");
   $("body").append(canvas);
 
-  $("body").click(() => game.clickJump());
+  $("body").click(() => game.click());
+
+  if(!getRecordGame())
+    record = createLocalStorageRecord();
+  else
+    record = getRecordGame();
+
+  image= new Image();
+  image.src = "bg-game.jpg";
+
 
   currentStatus = status.NOT_STARTED;
-  setInterval(() => game.run(), 40);
+  game.run();
 };
 
 
 game.run = function(){
   game.refresh();
   game.draw();
+  setTimeout(() => game.run(), 35);
 };
 
 game.refresh = function(){
@@ -139,8 +156,7 @@ game.refresh = function(){
 };
 
 game.draw = function(){
-  drawCanvasBackground();
-
+  bg.desenha(image, 0,0);
 
   if(currentStatus == status.NOT_STARTED){
     drawStartGameScreen();
@@ -150,8 +166,9 @@ game.draw = function(){
   }
   else if(currentStatus == status.PLAYING){
     game.obstacles.draw();
-    drawCountFrames();
+    drawPoints();
     drawQntJumps();
+    drawRecord();
   }
   game.ground.draw();
   game.character.draw();
@@ -170,18 +187,30 @@ drawStartGameScreen = function(){
 }
 
 drawYouLostScreen = function(){
+  //Drawing message
   ctx.font = "40px Arial Black";
   ctx.fillStyle = "#e66";
   ctx.fillText("You Lost!", WIDTH/2-115, HEIGHT/2-40);
+  //Drawing points
   ctx.font = "28px Arial";
   ctx.fillStyle = "#1f1";
   ctx.fillText(`Your score: ${game.character.points}`, WIDTH/2-94, HEIGHT/2+10);
+  //Drawing record
+  ctx.font = "28px Arial";
+  ctx.fillStyle = "#1f1";
+  ctx.fillText(`Record: ${record}`, WIDTH/2-85, HEIGHT/2+50);
 }
 
-drawCountFrames = function() {
+drawPoints = function() {
   ctx.font = "20px Arial";
   ctx.fillStyle = "#000";
   ctx.fillText(`Points: ${game.character.points}`,10,30);
+}
+
+drawRecord = function() {
+  ctx.font = "20px Arial";
+  ctx.fillStyle = "#000";
+  ctx.fillText(`Record: ${record}`,10,90);
 }
 
 drawQntJumps = function(){
@@ -197,5 +226,21 @@ checkLoseGame = function(character, obstacle){
        return true;
   return false;
 };
+
+getRecordGame = function(){
+  return localStorage.getItem("record");
+};
+
+createLocalStorageRecord = function(){
+  return localStorage.setItem("record", 0);
+};
+
+checkRecordGame = function(points) {
+  return points > localStorage.getItem("record") ? true : false;
+};
+
+setNewRecord = function(points) {
+  localStorage.setItem("record", points);
+}
 
 game.main();
