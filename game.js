@@ -7,6 +7,14 @@ const status = {
   LOOSER_GAME: 2,
 };
 
+const characterStatus = {
+  RUNNING_1 : 0,
+  RUNNING_2 : 1,
+  RUNNING_3 : 2,
+  RUNNING_4 : 3,
+  NOT_RUNNING: 3
+}
+
 game.ground = {
   x: 0,
   y: HEIGHT-50,
@@ -19,16 +27,17 @@ game.ground = {
 };
 
 game.character = {
-  x: 40,
+  x: 65,
   y: 50,
-  height: 100,
-  width: 60,
+  height: 115,
+  width: 107,
   color: "#e43",
   speed: 0,
   gravity: 1.6,
   jumpPower: 25,
   qntJumps: 3,
   points: 0,
+  status: '',
   refresh: function(){
     this.speed += this.gravity;
     this.y += this.speed;
@@ -45,27 +54,71 @@ game.character = {
       this.speed = -this.jumpPower;
     }
   },
-  draw: function(){
+  draw: async function(){
+
     let img = new Image();
-    img.src = "character-running.gif";
-    ctx.drawImage(img, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height);
+    //Sprite original abaixo
+    img.src = "character-sprite.gif";
+
+    if(this.status == characterStatus.RUNNING_1){
+      clearCharacter(this);
+      ctx.drawImage(img, 220, 0, this.width, this.height, this.x, this.y, this.width, this.height);
+      this.status = characterStatus.RUNNING_2;
+    }
+    else if(this.status == characterStatus.RUNNING_2){
+      clearCharacter(this);
+      ctx.drawImage(img, 445, 0, this.width, this.height, this.x, this.y, this.width, this.height);
+      this.status = characterStatus.RUNNING_3;
+    }
+    else if(this.status == characterStatus.RUNNING_3){
+      clearCharacter(this);
+      ctx.drawImage(img, 545, 0, this.width, this.height, this.x, this.y, this.width, this.height-5);
+      this.status = characterStatus.RUNNING_4;
+    }
+    else {
+      clearCharacter(this);
+      ctx.drawImage(img, 650, 0, this.width, this.height, this.x, this.y, this.width, this.height);
+      this.status = characterStatus.RUNNING_1;
+    }
+
+
+    /*ctx.fillStyle = "rgb(233,233,233)";
+    ctx.beginPath();
+    ctx.rect(this.x, this.y, this.width, this.height);
+    ctx.closePath();
+    ctx.fill();
+    ctx.drawImage(img, 220, 0, this.width, this.height, this.x, this.y, this.width, this.height);*/
   }
 };
+
+function clearCharacter(character){
+  //ctx.fillStyle = "rgb(233,233,233)";
+  let img= new Image();
+  image.src = "bg-game.jpg";
+
+  ctx.drawImage(img, character.x, character.y, character.width, character.height, character.x, character.x, character.x.width, character.x.height);
+  ctx.beginPath();
+  //ctx.rect(character.x, character.y, character.width, character.height);
+  ctx.closePath();
+  ctx.fill();
+}
 
 game.obstacles = {
   obstacles : [],
   colors: ["#ffe805", "#05ffd9", "#be05ff", "#1ed665", "#ff9126", "#11F"],
+  imgs: ["block-brick.jpg", "block-stone-1.jpg", "block-stone-2.jpg"],
   insersionTime: 0,
   speed: 8,
   insert: function() {
     let obstacle = {
       x: WIDTH,
-      width: 50 + Math.round(30 * Math.random()),
+      width: 50 + Math.round(50 * Math.random()),
       height: 30 + Math.round(120 * Math.random()),
-      color: this.colors[Math.round(5 * Math.random())]
+      color: this.colors[Math.round(5 * Math.random())],
+      img: this.imgs[Math.floor(3 * Math.random())]
     };
     this.obstacles.push(obstacle);
-    this.insersionTime = 20 + Math.round(40 * Math.random());
+    this.insersionTime = 20 + Math.round(60 * Math.random());
   },
   refresh: function(){
     if(this.insersionTime === 0)
@@ -93,8 +146,14 @@ game.obstacles = {
   draw: function() {
     for(let i=0; i<this.obstacles.length; i++){
       let obstacle = this.obstacles[i];
-      ctx.fillStyle = obstacle.color;
-      ctx.fillRect(obstacle.x, game.ground.y - obstacle.height, obstacle.width, obstacle.height);
+      let img = new Image();
+      img.src = obstacle.img;
+      //obstacle.img.src = this.imgs[Math.floor(2 * Math.random())];
+      //img.width = obstacle.width;
+      //img.height = obstacle.height;
+      ctx.drawImage(img, 0, 0, obstacle.width, obstacle.height, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+      /*ctx.fillStyle = obstacle.color;
+      ctx.fillRect(obstacle.x, game.ground.y - obstacle.height, obstacle.width, obstacle.height);*/
     }
   },
   clearObstables:function(){
@@ -144,7 +203,7 @@ game.main = function(){
 game.run = function(){
   game.refresh();
   game.draw();
-  setTimeout(() => game.run(), 35);
+  setTimeout(() => game.run(), 45);
 };
 
 game.refresh = function(){
@@ -156,8 +215,7 @@ game.refresh = function(){
 };
 
 game.draw = function(){
-  bg.desenha(image, 0,0);
-
+  drawCanvasBackground();
   if(currentStatus == status.NOT_STARTED){
     drawStartGameScreen();
   }
@@ -176,8 +234,9 @@ game.draw = function(){
 };
 
 drawCanvasBackground = function(){
-  ctx.fillStyle = "#50BEFF";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  //ctx.fillStyle = "#50BEFF";
+  //ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  bg.desenha(image, 0,0);
 };
 
 drawStartGameScreen = function(){
