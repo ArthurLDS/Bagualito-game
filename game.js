@@ -12,7 +12,12 @@ const characterStatus = {
   RUNNING_2 : 1,
   RUNNING_3 : 2,
   RUNNING_4 : 3,
-  NOT_RUNNING: 3
+  RUNNING_5 : 4,
+  RUNNING_6 : 5,
+  RUNNING_7 : 6,
+  RUNNING_8 : 7,
+  JUMPING: 4,
+  NOT_RUNNING: 5
 }
 
 game.ground = {
@@ -37,7 +42,9 @@ game.character = {
   jumpPower: 25,
   qntJumps: 3,
   points: 0,
-  status: '',
+  status: 0,
+  lastQntFrames: 0,
+  moveStatus: false,
   refresh: function(){
     this.speed += this.gravity;
     this.y += this.speed;
@@ -54,42 +61,72 @@ game.character = {
       this.speed = -this.jumpPower;
     }
   },
-  draw: async function(){
-
+  draw: function(){
     let img = new Image();
-    //Sprite original abaixo
     img.src = "character-sprite.gif";
 
-    if(this.status == characterStatus.RUNNING_1){
-      clearCharacter(this);
-      ctx.drawImage(img, 220, 0, this.width, this.height, this.x, this.y, this.width, this.height);
-      this.status = characterStatus.RUNNING_2;
-    }
-    else if(this.status == characterStatus.RUNNING_2){
-      clearCharacter(this);
-      ctx.drawImage(img, 445, 0, this.width, this.height, this.x, this.y, this.width, this.height);
-      this.status = characterStatus.RUNNING_3;
-    }
-    else if(this.status == characterStatus.RUNNING_3){
-      clearCharacter(this);
-      ctx.drawImage(img, 545, 0, this.width, this.height, this.x, this.y, this.width, this.height-5);
-      this.status = characterStatus.RUNNING_4;
-    }
-    else {
+    //Check jumping
+    if(this.y< game.ground.y-this.height){
       clearCharacter(this);
       ctx.drawImage(img, 650, 0, this.width, this.height, this.x, this.y, this.width, this.height);
-      this.status = characterStatus.RUNNING_1;
+      this.status = characterStatus.JUMPING;
+    }
+    else{
+      if(this.status == characterStatus.RUNNING_1){
+        clearCharacter(this);
+        ctx.drawImage(img, 0, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
+        //this.status = characterStatus.RUNNING_2;
+      }
+      else if(this.status == characterStatus.RUNNING_2){
+        clearCharacter(this);
+        ctx.drawImage(img, 109, 0, this.width, this.height+18, this.x, this.y-18, this.width, this.height+18);
+        //this.status = characterStatus.RUNNING_3;
+      }
+      else if(this.status == characterStatus.RUNNING_3){
+        clearCharacter(this);
+        ctx.drawImage(img, 220, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
+        //this.status = characterStatus.RUNNING_2;
+      }
+      else if(this.status == characterStatus.RUNNING_4){
+        clearCharacter(this);
+        ctx.drawImage(img, 324, 2, this.width, this.height, this.x, this.y-18, this.width, this.height);
+        //this.status = characterStatus.RUNNING_3;
+      }
+      else if(this.status == characterStatus.RUNNING_5){
+        clearCharacter(this);
+        ctx.drawImage(img, 439, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
+        //this.status = characterStatus.RUNNING_4;
+      }
+      else if(this.status == characterStatus.RUNNING_6){
+        clearCharacter(this);
+        ctx.drawImage(img, 540, 0, this.width, this.height+18, this.x, this.y-18, this.width, this.height+18);
+        //this.status = characterStatus.RUNNING_5;
+      }
+      else if(this.status == characterStatus.RUNNING_7) {
+        clearCharacter(this);
+        ctx.drawImage(img, 650, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
+      //  this.status = characterStatus.RUNNING_6;
+      }
+      else if(this.status == characterStatus.RUNNING_8) {
+        clearCharacter(this);
+        ctx.drawImage(img, 760, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
+        //this.status = characterStatus.RUNNING_1;
+      }
     }
 
+    if(this.lastQntFrames === frames){
+      if(this.status>=7)
+        this.status = 0;
+      else
+        this.status++;
+    }
+    else if(this.lastQntFrames <= frames){
+      this.lastQntFrames += 2;
+    }
 
-    /*ctx.fillStyle = "rgb(233,233,233)";
-    ctx.beginPath();
-    ctx.rect(this.x, this.y, this.width, this.height);
-    ctx.closePath();
-    ctx.fill();
-    ctx.drawImage(img, 220, 0, this.width, this.height, this.x, this.y, this.width, this.height);*/
   }
 };
+
 
 function clearCharacter(character){
   //ctx.fillStyle = "rgb(233,233,233)";
@@ -118,7 +155,7 @@ game.obstacles = {
       img: this.imgs[Math.floor(3 * Math.random())]
     };
     this.obstacles.push(obstacle);
-    this.insersionTime = 20 + Math.round(60 * Math.random());
+    this.insersionTime = 20 + Math.round(120 * Math.random());
   },
   refresh: function(){
     if(this.insersionTime === 0)
@@ -203,7 +240,7 @@ game.main = function(){
 game.run = function(){
   game.refresh();
   game.draw();
-  setTimeout(() => game.run(), 45);
+  setTimeout(() => game.run(), 49);
 };
 
 game.refresh = function(){
