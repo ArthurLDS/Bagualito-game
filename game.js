@@ -1,10 +1,19 @@
 
 var canvas, ctx, frames = 0, game = {}, currentStatus, record, image;
+
 const WIDTH=900, HEIGHT=600;
 const status = {
   NOT_STARTED: 0,
   PLAYING: 1,
   LOOSER_GAME: 2,
+};
+
+const level = {
+  LEVEL_1 : 1,
+  LEVEL_2 : 5,
+  LEVEL_3 : 8,
+  LEVEL_4 : 18,
+  LEVEL_FINAL: 25
 };
 
 const characterStatus = {
@@ -22,18 +31,31 @@ const characterStatus = {
 
 game.ground = {
   x: 0,
-  y: HEIGHT-50,
-  height: 50,
-  color: "#b1ab21",
+  y: HEIGHT-80,
+  height: 80,
+  width: 595,
+  refresh: function(){
+    if(!game.obstacles.speed)
+      this.x -= 8
+    else
+      this.x -= game.obstacles.speed;
+
+    if(this.x<=-300)
+      this.x += 300;
+
+  },
   draw: function(){
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, WIDTH, this.height);
+      let img = new Image();
+      img.src =  "ground.png";
+
+      ctx.drawImage(img, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height);
+      ctx.drawImage(img, 0, 0, this.width, this.height, this.x + this.width, this.y, this.width, this.height);
   }
 };
 
 game.character = {
   x: 65,
-  y: 50,
+  y: 50+5,
   height: 115,
   width: 107,
   color: "#e43",
@@ -45,14 +67,19 @@ game.character = {
   status: 0,
   lastQntFrames: 0,
   moveStatus: false,
+  level : '',
   refresh: function(){
     this.speed += this.gravity;
     this.y += this.speed;
+    //Manter character no chão
     if(this.y >= game.ground.y - this.height && currentStatus != status.LOOSER_GAME){
       this.y = game.ground.y - this.height;
     }
     if(this.y == game.ground.y - this.height)
       this.qntJumps = 3;
+
+    if(!this.level || currentStatus == status.LOOSER_GAME)
+      this.level = level.LEVEL_1;
 
   },
   jump: function(){
@@ -72,51 +99,12 @@ game.character = {
       this.status = characterStatus.JUMPING;
     }
     else{
-      if(this.status == characterStatus.RUNNING_1){
-        clearCharacter(this);
-        ctx.drawImage(img, 0, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
-        //this.status = characterStatus.RUNNING_2;
-      }
-      else if(this.status == characterStatus.RUNNING_2){
-        clearCharacter(this);
-        ctx.drawImage(img, 109, 0, this.width, this.height+18, this.x, this.y-18, this.width, this.height+18);
-        //this.status = characterStatus.RUNNING_3;
-      }
-      else if(this.status == characterStatus.RUNNING_3){
-        clearCharacter(this);
-        ctx.drawImage(img, 220, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
-        //this.status = characterStatus.RUNNING_2;
-      }
-      else if(this.status == characterStatus.RUNNING_4){
-        clearCharacter(this);
-        ctx.drawImage(img, 324, 2, this.width, this.height, this.x, this.y-18, this.width, this.height);
-        //this.status = characterStatus.RUNNING_3;
-      }
-      else if(this.status == characterStatus.RUNNING_5){
-        clearCharacter(this);
-        ctx.drawImage(img, 439, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
-        //this.status = characterStatus.RUNNING_4;
-      }
-      else if(this.status == characterStatus.RUNNING_6){
-        clearCharacter(this);
-        ctx.drawImage(img, 540, 0, this.width, this.height+18, this.x, this.y-18, this.width, this.height+18);
-        //this.status = characterStatus.RUNNING_5;
-      }
-      else if(this.status == characterStatus.RUNNING_7) {
-        clearCharacter(this);
-        ctx.drawImage(img, 650, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
-      //  this.status = characterStatus.RUNNING_6;
-      }
-      else if(this.status == characterStatus.RUNNING_8) {
-        clearCharacter(this);
-        ctx.drawImage(img, 760, 0, this.width, this.height, this.x, this.y-18, this.width, this.height);
-        //this.status = characterStatus.RUNNING_1;
-      }
+      drawCharacterSpriteSituations(img, this);
     }
 
     if(this.lastQntFrames === frames){
-      if(this.status>=7)
-        this.status = 0;
+      if(this.status>= characterStatus.RUNNING_8)
+        this.status = characterStatus.RUNNING_1;
       else
         this.status++;
     }
@@ -127,13 +115,54 @@ game.character = {
   }
 };
 
+function drawCharacterSpriteSituations(img, character){
+
+  if(character.status == characterStatus.RUNNING_1){
+    clearCharacter(character);
+    ctx.drawImage(img, 0, 0, character.width, character.height, character.x, character.y-18, character.width, character.height);
+    //this.status = characterStatus.RUNNING_2;
+  }
+  else if(character.status == characterStatus.RUNNING_2){
+    clearCharacter(character);
+    ctx.drawImage(img, 109, 0,character.width, character.height+18, character.x, character.y-18, character.width, character.height+18);
+    //this.status = characterStatus.RUNNING_3;
+  }
+  else if(character.status == characterStatus.RUNNING_3){
+    clearCharacter(character);
+    ctx.drawImage(img, 220, 0, character.width, character.height, character.x, character.y-18, character.width, character.height);
+    //this.status = characterStatus.RUNNING_2;
+  }
+  else if(character.status == characterStatus.RUNNING_4){
+    clearCharacter(character);
+    ctx.drawImage(img, 324, 2, character.width, character.height, character.x, character.y-18, character.width, character.height);
+    //this.status = characterStatus.RUNNING_3;
+  }
+  else if(character.status == characterStatus.RUNNING_5){
+    clearCharacter(character);
+    ctx.drawImage(img, 439, 0, character.width, character.height, character.x, character.y-18, character.width, character.height);
+    //this.status = characterStatus.RUNNING_4;
+  }
+  else if(character.status == characterStatus.RUNNING_6){
+    clearCharacter(character);
+    ctx.drawImage(img, 540, 0, character.width, character.height+18, character.x, character.y-18, character.width, character.height+18);
+    //this.status = characterStatus.RUNNING_5;
+  }
+  else if(character.status == characterStatus.RUNNING_7) {
+    clearCharacter(character);
+    ctx.drawImage(img, 650, 0, character.width, character.height, character.x, character.y-18, character.width, character.height);
+  //  this.status = characterStatus.RUNNING_6;
+  }
+  else if(character.status == characterStatus.RUNNING_8) {
+    clearCharacter(character);
+    ctx.drawImage(img, 760, 0, character.width, character.height, character.x, character.y-18, character.width, character.height);
+    //this.status = characterStatus.RUNNING_1;
+  }
+}
 
 function clearCharacter(character){
   //ctx.fillStyle = "rgb(233,233,233)";
   let img= new Image();
   image.src = "bg-game.jpg";
-
-  ctx.drawImage(img, character.x, character.y, character.width, character.height, character.x, character.x, character.x.width, character.x.height);
   ctx.beginPath();
   //ctx.rect(character.x, character.y, character.width, character.height);
   ctx.closePath();
@@ -145,7 +174,9 @@ game.obstacles = {
   colors: ["#ffe805", "#05ffd9", "#be05ff", "#1ed665", "#ff9126", "#11F"],
   imgs: ["block-brick.jpg", "block-stone-1.jpg", "block-stone-2.jpg"],
   insersionTime: 0,
-  speed: 8,
+  speed: 0,
+  scored : false,
+
   insert: function() {
     let obstacle = {
       x: WIDTH,
@@ -155,27 +186,56 @@ game.obstacles = {
       img: this.imgs[Math.floor(3 * Math.random())]
     };
     this.obstacles.push(obstacle);
-    this.insersionTime = 20 + Math.round(120 * Math.random());
+
+    if(game.character.points <= level.LEVEL_1 || game.character.points < level.LEVEL_2){
+      game.character.level= level.LEVEL_1;
+      this.insersionTime = 20 + Math.round(120 * Math.random());
+      this.speed = 8;
+    }
+    else if(game.character.points >= level.LEVEL_2 && game.character.points < level.LEVEL_3){
+      game.character.level = level.LEVEL_2;
+      this.insersionTime = 20 + Math.round(80 * Math.random());
+      this.speed = 10;
+    }
+    else if(game.character.points >= level.LEVEL_3 && game.character.points < level.LEVEL_4){
+      game.character.level = level.LEVEL_3;
+      this.insersionTime = 20 + Math.round(60 * Math.random());
+      this.speed = 13;
+    }
+    else if(game.character.points >= level.LEVEL_4 && game.character.points < level.LEVEL_FINAL){
+      game.character.level = level.LEVEL_4;
+      this.insersionTime = 20 + Math.round(70 * Math.random());
+      this.speed = 18;
+    }
+    else if(game.character.points >= level.LEVEL_FINAL){
+      game.character.level = level.LEVEL_FINAL;
+      this.insersionTime = 20 + Math.round(50 * Math.random());
+      this.speed = 21;
+    }
   },
   refresh: function(){
     if(this.insersionTime === 0)
       this.insert();
     else
       this.insersionTime--;
+
+    if(this.speed<=0)
+      this.speed = 8;
+
     for (let i = 0; i <this.obstacles.length; i++) {
       let obstacle = this.obstacles[i];
       obstacle.x -= this.speed;
-      obstacle.y = game.ground.y - obstacle.height;
+      obstacle.y = game.ground.y - obstacle.height+5;
 
       if(checkLoseGame(game.character, obstacle)){
         currentStatus = status.LOOSER_GAME;
       }
-      else if(game.character.x + game.character.width == obstacle.x){
+      else if(game.character.x + game.character.width >= obstacle.x && !obstacle.scored){
         game.character.points++;
+        obstacle.scored = true;
         if(checkRecordGame(game.character.points))
           setNewRecord(game.character.points);
       }
-
       if(obstacle.x < -obstacle.width)
         this.obstacles.splice(i, 1);
     }
@@ -185,12 +245,7 @@ game.obstacles = {
       let obstacle = this.obstacles[i];
       let img = new Image();
       img.src = obstacle.img;
-      //obstacle.img.src = this.imgs[Math.floor(2 * Math.random())];
-      //img.width = obstacle.width;
-      //img.height = obstacle.height;
       ctx.drawImage(img, 0, 0, obstacle.width, obstacle.height, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-      /*ctx.fillStyle = obstacle.color;
-      ctx.fillRect(obstacle.x, game.ground.y - obstacle.height, obstacle.width, obstacle.height);*/
     }
   },
   clearObstables:function(){
@@ -223,10 +278,10 @@ game.main = function(){
 
   $("body").click(() => game.click());
 
-  if(!getRecordGame())
-    record = createLocalStorageRecord();
-  else
-    record = getRecordGame();
+  if(getRecordGame() == null){
+    createLocalStorageRecord();
+  }
+  record = getRecordGame();
 
   image= new Image();
   image.src = "bg-game.jpg";
@@ -240,11 +295,13 @@ game.main = function(){
 game.run = function(){
   game.refresh();
   game.draw();
-  setTimeout(() => game.run(), 49);
+  //window.requestAnimationFrame(game.run());
+  setTimeout(() => game.run(), 35);
 };
 
 game.refresh = function(){
   frames++;
+  game.ground.refresh();
   game.character.refresh();
   if(currentStatus == status.PLAYING){
     game.obstacles.refresh();
@@ -262,6 +319,7 @@ game.draw = function(){
   else if(currentStatus == status.PLAYING){
     game.obstacles.draw();
     drawPoints();
+    drawLevel();
     drawQntJumps();
     drawRecord();
   }
@@ -286,15 +344,15 @@ drawYouLostScreen = function(){
   //Drawing message
   ctx.font = "40px Arial Black";
   ctx.fillStyle = "#e66";
-  ctx.fillText("You Lost!", WIDTH/2-115, HEIGHT/2-40);
+  ctx.fillText("GAME OVER", WIDTH/2-130, HEIGHT/2-40);
   //Drawing points
   ctx.font = "28px Arial";
   ctx.fillStyle = "#1f1";
-  ctx.fillText(`Your score: ${game.character.points}`, WIDTH/2-94, HEIGHT/2+10);
+  ctx.fillText(`Your score: ${game.character.points}`, WIDTH/2-87, HEIGHT/2+10);
   //Drawing record
   ctx.font = "28px Arial";
   ctx.fillStyle = "#1f1";
-  ctx.fillText(`Record: ${record}`, WIDTH/2-85, HEIGHT/2+50);
+  ctx.fillText(`Record: ${record}`, WIDTH/2-77, HEIGHT/2+50);
 }
 
 drawPoints = function() {
@@ -307,6 +365,29 @@ drawRecord = function() {
   ctx.font = "20px Arial";
   ctx.fillStyle = "#000";
   ctx.fillText(`Record: ${record}`,10,90);
+}
+
+drawLevel = function(){
+  ctx.font = "23px Arial Black";
+  ctx.fillStyle = "#ee6666";
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 3;
+  ctx.shadowColor = "rgba(0,0,0,0.3)";
+  ctx.shadowBlur = 4;
+
+  if(game.character.level == level.LEVEL_1){
+    ctx.fillText(`Level: 1`, WIDTH-110, 30);
+  }
+
+  else if(game.character.level == level.LEVEL_2)
+    ctx.fillText(`Level: 2`, WIDTH-110, 30);
+  else if(game.character.level == level.LEVEL_3)
+    ctx.fillText(`Level: 3`, WIDTH-110, 30);
+  else if(game.character.level == level.LEVEL_4)
+    ctx.fillText(`Level: 4`, WIDTH-110, 30);
+  else
+    ctx.fillText(`Level: FINAL`, WIDTH-170, 30);
+
 }
 
 drawQntJumps = function(){
@@ -337,6 +418,7 @@ checkRecordGame = function(points) {
 
 setNewRecord = function(points) {
   localStorage.setItem("record", points);
+  record = points;
 }
 
 game.main();
