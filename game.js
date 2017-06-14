@@ -68,6 +68,7 @@ game.character = {
   lastQntFrames: 0,
   moveStatus: false,
   level : '',
+  brokedRecord: '',
   refresh: function(){
     this.speed += this.gravity;
     this.y += this.speed;
@@ -233,8 +234,13 @@ game.obstacles = {
       else if(game.character.x + game.character.width >= obstacle.x && !obstacle.scored){
         game.character.points++;
         obstacle.scored = true;
-        if(checkRecordGame(game.character.points))
+        if(checkRecordGame(game.character.points)){
           setNewRecord(game.character.points);
+          game.character.brokedRecord = true;
+        }
+        else {
+          game.character.brokedRecord = false;
+        }
       }
       if(obstacle.x < -obstacle.width)
         this.obstacles.splice(i, 1);
@@ -306,6 +312,9 @@ game.refresh = function(){
   if(currentStatus == status.PLAYING){
     game.obstacles.refresh();
   }
+  if(currentStatus == status.LOOSER_GAME){
+    game.character.brokedRecord = false;
+  }
 };
 
 game.draw = function(){
@@ -315,6 +324,8 @@ game.draw = function(){
   }
   else if(currentStatus == status.LOOSER_GAME){
     drawYouLostScreen();
+    if(game.character.brokedRecord)
+      drawBigTextNewRecord();
   }
   else if(currentStatus == status.PLAYING){
     game.obstacles.draw();
@@ -322,15 +333,16 @@ game.draw = function(){
     drawLevel();
     drawQntJumps();
     drawRecord();
+    if(game.character.brokedRecord)
+      drawTextNewRecord();
   }
+
   game.ground.draw();
   game.character.draw();
 
 };
 
 drawCanvasBackground = function(){
-  //ctx.fillStyle = "#50BEFF";
-  //ctx.fillRect(0, 0, WIDTH, HEIGHT);
   bg.desenha(image, 0,0);
 };
 
@@ -394,7 +406,25 @@ drawQntJumps = function(){
   ctx.font = "20px Arial";
   ctx.fillStyle = "#000";
   ctx.fillText(`Jumps: ${game.character.qntJumps}`,10,60);
-}
+};
+
+drawTextNewRecord = function(){
+  ctx.save();
+  ctx.font = "18px Arial Black";
+  ctx.fillStyle = "#ffb91a";
+  ctx.rotate(-0.3);
+    ctx.fillText("NEW RECORD!", 15, 145);
+  ctx.restore();
+};
+
+drawBigTextNewRecord = function(){
+  ctx.save();
+  ctx.font = "28px Arial Black";
+  ctx.fillStyle = "#ffb91a";
+  ctx.rotate(-0.2);
+  ctx.fillText("NEW RECORD!", WIDTH/2-280, HEIGHT/2-30);
+  ctx.restore();
+};
 
 checkLoseGame = function(character, obstacle){
   if(character.x < obstacle.x + obstacle.width &&
