@@ -117,6 +117,11 @@ game.character = {
 };
 
 function drawCharacterSpriteSituations(img, character){
+  ctx.save();
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.shadowColor = "";
+  ctx.shadowBlur = 0;
 
   if(character.status == characterStatus.RUNNING_1){
     clearCharacter(character);
@@ -158,6 +163,7 @@ function drawCharacterSpriteSituations(img, character){
     ctx.drawImage(img, 760, 0, character.width, character.height, character.x, character.y-18, character.width, character.height);
     //this.status = characterStatus.RUNNING_1;
   }
+  ctx.restore();
 }
 
 function clearCharacter(character){
@@ -173,7 +179,7 @@ function clearCharacter(character){
 game.obstacles = {
   obstacles : [],
   colors: ["#ffe805", "#05ffd9", "#be05ff", "#1ed665", "#ff9126", "#11F"],
-  imgs: ["block-brick.jpg", "block-stone-1.jpg", "block-stone-2.jpg"],
+  imgs: ["block-brick.jpg", "block-stone-1.jpg", "block-stone-2.jpg", "block-land.png", "block-wood.png", "block-stone-3.png"],
   insersionTime: 0,
   speed: 0,
   scored : false,
@@ -181,10 +187,10 @@ game.obstacles = {
   insert: function() {
     let obstacle = {
       x: WIDTH,
-      width: 50 + Math.round(50 * Math.random()),
-      height: 30 + Math.round(120 * Math.random()),
+      width: 80 + Math.round(20 * Math.random()),
+      height: 50 + Math.round(110 * Math.random()),
       color: this.colors[Math.round(5 * Math.random())],
-      img: this.imgs[Math.floor(3 * Math.random())]
+      img: this.imgs[Math.floor(6 * Math.random())]
     };
     this.obstacles.push(obstacle);
 
@@ -312,7 +318,7 @@ game.refresh = function(){
   if(currentStatus == status.PLAYING){
     game.obstacles.refresh();
   }
-  if(currentStatus == status.LOOSER_GAME){
+  if(currentStatus == status.NOT_STARTED){
     game.character.brokedRecord = false;
   }
 };
@@ -368,15 +374,27 @@ drawYouLostScreen = function(){
 }
 
 drawPoints = function() {
+  ctx.save();
   ctx.font = "20px Arial";
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.shadowColor = "";
+  ctx.shadowBlur = 0;
   ctx.fillStyle = "#000";
   ctx.fillText(`Points: ${game.character.points}`,10,30);
+  ctx.restore();
 }
 
 drawRecord = function() {
+  ctx.save();
   ctx.font = "20px Arial";
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.shadowColor = "";
+  ctx.shadowBlur = 0;
   ctx.fillStyle = "#000";
   ctx.fillText(`Record: ${record}`,10,90);
+  ctx.restore();
 }
 
 drawLevel = function(){
@@ -403,11 +421,16 @@ drawLevel = function(){
 }
 
 drawQntJumps = function(){
+  ctx.save();
   ctx.font = "20px Arial";
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.shadowColor = "";
+  ctx.shadowBlur = 0;
   ctx.fillStyle = "#000";
   ctx.fillText(`Jumps: ${game.character.qntJumps}`,10,60);
+  ctx.restore();
 };
-
 drawTextNewRecord = function(){
   ctx.save();
   ctx.font = "18px Arial Black";
