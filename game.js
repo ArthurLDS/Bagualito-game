@@ -1,5 +1,5 @@
 
-var canvas, ctx, frames = 0, game = {}, currentStatus, record, image;
+var canvas, ctx, frames = 0, game = {}, currentStatus, record, image, soundtrack;
 
 const WIDTH=900, HEIGHT=600;
 const status = {
@@ -46,7 +46,7 @@ game.ground = {
   },
   draw: function(){
       let img = new Image();
-      img.src =  "ground.png";
+      img.src =  "assets/imgs/backgrounds/ground.png";
 
       ctx.drawImage(img, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height);
       ctx.drawImage(img, 0, 0, this.width, this.height, this.x + this.width, this.y, this.width, this.height);
@@ -69,7 +69,10 @@ game.character = {
   moveStatus: false,
   level : '',
   brokedRecord: '',
+  loseThemeIsPlaying : '',
   refresh: function(){
+    let audio = new Audio("assets/sounds/lose-theme.mp3");
+
     this.speed += this.gravity;
     this.y += this.speed;
     //Manter character no chão
@@ -79,19 +82,32 @@ game.character = {
     if(this.y == game.ground.y - this.height)
       this.qntJumps = 3;
 
-    if(!this.level || currentStatus == status.LOOSER_GAME)
+    if(!this.level || currentStatus == status.LOOSER_GAME){
       this.level = level.LEVEL_1;
+    }
+    if(currentStatus != status.LOOSER_GAME){
+      this.loseThemeIsPlaying = false;
+      if(soundtrack.paused)
+        fadeInSoundtrack();
+    }
 
+    if(currentStatus == status.LOOSER_GAME && !this.loseThemeIsPlaying){
+      fadeOutSoundtrack();
+      audio.play();
+      this.loseThemeIsPlaying = true;
+    }
   },
   jump: function(){
+    let audio = new Audio("assets/sounds/jump.wav");
     if(this.qntJumps > 0 && this.qntJumps <= 3){
       this.qntJumps--;
       this.speed = -this.jumpPower;
+      audio.play();
     }
   },
   draw: function(){
     let img = new Image();
-    img.src = "character-sprite.gif";
+    img.src = "assets/imgs/characters/character-sprite.gif";
 
     //Check jumping
     if(this.y< game.ground.y-this.height){
@@ -115,6 +131,30 @@ game.character = {
 
   }
 };
+
+function fadeOutSoundtrack(){
+    var fadeAudio = setInterval(function(){
+      if(soundtrack.volume>0)
+        soundtrack.volume-= 0.25;
+      if(soundtrack.volume<=0){
+        soundtrack.pause();
+        clearInterval(fadeAudio);
+      }
+    }, 500);
+}
+
+function fadeInSoundtrack(){
+  if(soundtrack.currentTime >0)
+    soundtrack.currentTime = 0;
+  soundtrack.play();
+    var fadeAudio = setInterval(function(){
+      if(soundtrack.volume<=1)
+        soundtrack.volume+= 0.25;
+      if(soundtrack.volume>=1){
+        clearInterval(fadeAudio);
+      }
+    }, 500);
+}
 
 function drawCharacterSpriteSituations(img, character){
   ctx.save();
@@ -167,11 +207,9 @@ function drawCharacterSpriteSituations(img, character){
 }
 
 function clearCharacter(character){
-  //ctx.fillStyle = "rgb(233,233,233)";
   let img= new Image();
-  image.src = "bg-game.jpg";
+  image.src = "assets/imgs/backgrounds/bg-game.jpg";
   ctx.beginPath();
-  //ctx.rect(character.x, character.y, character.width, character.height);
   ctx.closePath();
   ctx.fill();
 }
@@ -179,7 +217,7 @@ function clearCharacter(character){
 game.obstacles = {
   obstacles : [],
   colors: ["#ffe805", "#05ffd9", "#be05ff", "#1ed665", "#ff9126", "#11F"],
-  imgs: ["block-brick.jpg", "block-stone-1.jpg", "block-stone-2.jpg", "block-land.png", "block-wood.png", "block-stone-3.png"],
+  imgs: ["assets/imgs/blocks/block-brick.jpg", "assets/imgs/blocks/block-stone-1.jpg", "assets/imgs/blocks/block-stone-2.jpg", "assets/imgs/blocks/block-land.png", "assets/imgs/blocks/block-wood.png", "assets/imgs/blocks/block-stone-3.png"],
   insersionTime: 0,
   speed: 0,
   scored : false,
@@ -196,12 +234,12 @@ game.obstacles = {
 
     if(game.character.points <= level.LEVEL_1 || game.character.points < level.LEVEL_2){
       game.character.level= level.LEVEL_1;
-      this.insersionTime = 20 + Math.round(120 * Math.random());
+      this.insersionTime = 60 + Math.round(140 * Math.random());
       this.speed = 8;
     }
     else if(game.character.points >= level.LEVEL_2 && game.character.points < level.LEVEL_3){
       game.character.level = level.LEVEL_2;
-      this.insersionTime = 20 + Math.round(80 * Math.random());
+      this.insersionTime = 50 + Math.round(80 * Math.random());
       this.speed = 10;
     }
     else if(game.character.points >= level.LEVEL_3 && game.character.points < level.LEVEL_4){
@@ -217,7 +255,7 @@ game.obstacles = {
     else if(game.character.points >= level.LEVEL_FINAL){
       game.character.level = level.LEVEL_FINAL;
       this.insersionTime = 20 + Math.round(50 * Math.random());
-      this.speed = 21;
+      this.speed = this.speed + 0.4;
     }
   },
   refresh: function(){
@@ -242,6 +280,8 @@ game.obstacles = {
         obstacle.scored = true;
         if(checkRecordGame(game.character.points)){
           setNewRecord(game.character.points);
+          if(!game.character.brokedRecord)
+            new Audio("assets/sounds/new-record-sound.wav").play();
           game.character.brokedRecord = true;
         }
         else {
@@ -270,14 +310,17 @@ game.click = function(){
     currentStatus = status.PLAYING;
     game.character.speed = 0;
   }
-  else if(currentStatus == status.LOOSER_GAME){
+
+  else
+      game.character.jump();
+};
+
+game.keypress = function () {
+  if(currentStatus == status.LOOSER_GAME){
     game.obstacles.clearObstables();
     game.character.points = 0;
     currentStatus = status.NOT_STARTED;
   }
-
-  else
-      game.character.jump();
 };
 
 game.main = function(){
@@ -289,6 +332,7 @@ game.main = function(){
   $("body").append(canvas);
 
   $("body").click(() => game.click());
+  $("body").keypress(() => game.keypress());
 
   if(getRecordGame() == null){
     createLocalStorageRecord();
@@ -296,8 +340,10 @@ game.main = function(){
   record = getRecordGame();
 
   image= new Image();
-  image.src = "bg-game.jpg";
+  image.src = "assets/imgs/backgrounds/bg-game.jpg";
 
+  soundtrack = new Audio("assets/sounds/soundtrack.mp3");
+  soundtrack.play();
 
   currentStatus = status.NOT_STARTED;
   game.run();
@@ -349,7 +395,9 @@ game.draw = function(){
 };
 
 drawCanvasBackground = function(){
-  bg.desenha(image, 0,0);
+  let imagem = new Image();
+  imagem.src = "assets/imgs/backgrounds/bg-game.jpg";
+  ctx.drawImage(imagem, 0, 0, 900, 600, 0, 0, WIDTH, HEIGHT);
 };
 
 drawStartGameScreen = function(){
@@ -371,6 +419,10 @@ drawYouLostScreen = function(){
   ctx.font = "28px Arial";
   ctx.fillStyle = "#1f1";
   ctx.fillText(`Record: ${record}`, WIDTH/2-77, HEIGHT/2+50);
+
+  ctx.font = "35px Arial";
+  ctx.fillStyle = "#3f3";
+  ctx.fillText(`PRESS ANY BUTTON TO RESTART...`, WIDTH/2-300, HEIGHT/2+195);
 }
 
 drawPoints = function() {
