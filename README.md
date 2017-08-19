@@ -9,8 +9,7 @@ Autor
 -----
 
 Arthur Lima de Souza 
-
-contact: arthurlds73@gmail.com
+Contact: arthurlds73@gmail.com
 
 <br>	
 Collaborations are welcome!
