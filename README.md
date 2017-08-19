@@ -8,7 +8,7 @@ The Bagualito is a game written totally in JavaScript, where you have to just ju
 Autor
 -----
 
-Arthur Lima de Souza 
+Arthur Lima de Souza <br>
 Contact: arthurlds73@gmail.com
 
 <br>	
