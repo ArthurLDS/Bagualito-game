@@ -1,7 +1,7 @@
 Bagualito Game
 ==============
 
-The Bagualito is a game written totally in JavaScript, where you just have to jump the obstacles to survive.
+Bagualito is a game written totally in JavaScript, where you just have to jump the obstacles to survive, but the difficulties are endless.
 
 ![Bagualito-game img](https://media.giphy.com/media/1421Iy5RP3Ezle/giphy.gif)
 
